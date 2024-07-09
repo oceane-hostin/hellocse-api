@@ -1,52 +1,75 @@
 services:
-    web:
+    laravel.test:
         build:
-            context: ./
-            dockerfile: ./.docker/php/Dockerfile.local
+            context: ./vendor/laravel/sail/runtimes/8.3
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.3/app
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
         ports:
-            - ${APP_PORT:-8000}:8000
-            - ${VITE_PORT:-5173}:${VITE_PORT:-5173}
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
-            - ./:${WORKDIR}
-            - ./vendor/:${WORKDIR}/vendor
+            - '.:/var/www/html'
         networks:
-            - lara11-beta
+            - sail
         depends_on:
             - mysql
             - redis
-            - minio
+            - meilisearch
             - mailpit
+            - selenium
     mysql:
-        image: mysql/mysql-server:${MYSQL_VERSION:-8.0}
+        image: 'mysql/mysql-server:8.0'
         ports:
-            - ${FORWARD_DB_PORT:-3306}:3306
+            - '${FORWARD_DB_PORT:-3306}:3306'
         environment:
-            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-            MYSQL_ROOT_HOST: "%"
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_USER: ${DB_USERNAME}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
             MYSQL_ALLOW_EMPTY_PASSWORD: 1
         volumes:
-            - ${DB_VOLUME_LOCAL:-./database/mysql-test-data}:/var/lib/mysql
+            - 'sail-mysql:/var/lib/mysql'
+            - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
         networks:
-            - lara11-beta
+            - sail
         healthcheck:
             test:
                 - CMD
                 - mysqladmin
                 - ping
-                - -p${DB_PASSWORD}
+                - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
-    redis:
-        image: redis:alpine
+
+    phpmyadmin:
+        depends_on:
+            - mysql
+        image: phpmyadmin
+        restart: always
         ports:
-            - ${FORWARD_REDIS_PORT:-6379}:6379
+            - 8080:80
+        environment:
+            PMA_HOST: mysql
+
+    redis:
+        image: 'redis:alpine'
+        ports:
+            - '${FORWARD_REDIS_PORT:-6379}:6379'
         volumes:
-            - ${REDIS_VOLUME_LOCAL:-./database/redis-data}:/data
+            - 'sail-redis:/data'
         networks:
-            - lara11-beta
+            - sail
         healthcheck:
             test:
                 - CMD
@@ -54,36 +77,47 @@ services:
                 - ping
             retries: 3
             timeout: 5s
-    minio:
-        image: minio/minio:latest
+    meilisearch:
+        image: 'getmeili/meilisearch:latest'
         ports:
-            - ${FORWARD_MINIO_PORT:-9000}:9000
-            - ${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900
+            - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         environment:
-            MINIO_ROOT_USER: ${MINIO_ROOT_USER:-sail}
-            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password}
+            MEILI_NO_ANALYTICS: '${MEILISEARCH_NO_ANALYTICS:-false}'
         volumes:
-            - ${MINIO_VOLUME_LOCAL:-./storage/minio-data}:/data
+            - 'sail-meilisearch:/meili_data'
         networks:
-            - lara11-beta
-        command: minio server /data/minio --console-address ":${FORWARD_MINIO_CONSOLE_PORT}"
+            - sail
         healthcheck:
             test:
                 - CMD
-                - curl
-                - -f
-                - http://localhost:${FORWARD_MINIO_PORT}/minio/health/live
+                - wget
+                - '--no-verbose'
+                - '--spider'
+                - 'http://127.0.0.1:7700/health'
             retries: 3
             timeout: 5s
     mailpit:
-        image: axllent/mailpit:latest
+        image: 'axllent/mailpit:latest'
         ports:
-            - ${FORWARD_MAILPIT_PORT:-1025}:1025
-            - ${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025
-        volumes:
-            - ${MP_VOLUME_LOCAL:-./storage/mail-data}:/data
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
-            - lara11-beta
+            - sail
+    selenium:
+        image: selenium/standalone-chrome
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        volumes:
+            - '/dev/shm:/dev/shm'
+        networks:
+            - sail
 networks:
-    lara11-beta:
+    sail:
         driver: bridge
+volumes:
+    sail-mysql:
+        driver: local
+    sail-redis:
+        driver: local
+    sail-meilisearch:
+        driver: local
