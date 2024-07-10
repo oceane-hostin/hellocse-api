@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\StatusEnum;
+use App\Http\Requests\ProfilePostRequest;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class ProfileController extends Controller
 {
@@ -13,7 +18,7 @@ class ProfileController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index() : JsonResponse
     {
         $profiles = ProfileResource::collection(
             Profile::all()->where('status', '=', StatusEnum::ACTIVE->value)
@@ -25,17 +30,51 @@ class ProfileController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ProfilePostRequest $request) : JsonResponse
     {
-        //
+        // Request validation
+        $validatedData = $request->validated();
+
+        // Creation of new profile
+        $profileRequestData =
+        [
+            'firstname' => $validatedData['firstname'],
+            'lastname' => $validatedData['lastname'],
+            'image' => $validatedData['image'],
+        ];
+
+        // Field is not required, will be awaiting if not specified
+        if (!empty($validatedData->status)) {
+            $profileRequestData['status'] = $validatedData['status'];
+        }
+
+        $profile = Profile::create($profileRequestData);
+
+        return response()->json($profile, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id) : JsonResponse
     {
-        //
+        try {
+            $profile = Profile::query()->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "error" => "This profile doesn't exist"
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if($profile->status == StatusEnum::ACTIVE->value
+            || Auth::check()
+        ){
+            return response()->json($profile);
+        }
+
+        return response()->json([
+            "error" => "You don't have the right to access to this profile"
+        ], Response::HTTP_FORBIDDEN);
     }
 
     /**

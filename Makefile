@@ -28,6 +28,9 @@ resource:
 resource-collection:
 	@$(SAIL) artisan make:resource --collection
 
+request:
+	@$(SAIL) artisan make:request
+
 route-show:
 	@$(SAIL) artisan route:list
 

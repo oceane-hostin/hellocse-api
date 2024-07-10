@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileResource extends JsonResource
 {
@@ -20,6 +21,7 @@ class ProfileResource extends JsonResource
             'firstname' => $this->firstname,
             'lastname' => $this->lastname,
             'image' => $this->image,
+            'status' => $this->when(Auth::check(), 'status'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];
