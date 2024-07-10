@@ -3,9 +3,9 @@
 
  enum StatusEnum: string
  {
-     case ACTIVE = 'active';
-     case INACTIVE = 'inactive';
-     case AWAITING = 'awaiting';
+     case ACTIVE = '1';
+     case INACTIVE = '0';
+     case AWAITING = '2';
 
      public static function toArray(): array
      {
