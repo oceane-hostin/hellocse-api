@@ -50,7 +50,7 @@ class ProfileController extends Controller
 
         $profile = Profile::create($profileRequestData);
 
-        return response()->json($profile, 201);
+        return response()->json(new ProfileResource($profile), Response::HTTP_CREATED);
     }
 
     /**
@@ -58,6 +58,7 @@ class ProfileController extends Controller
      */
     public function show(string $id) : JsonResponse
     {
+        // Get profile if exist
         try {
             $profile = Profile::query()->findOrFail($id);
         } catch (ModelNotFoundException $e) {
@@ -66,10 +67,11 @@ class ProfileController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
+        // Access without authenticate is only allowed if profile is active
         if($profile->status == StatusEnum::ACTIVE->value
             || Auth::check()
         ){
-            return response()->json($profile);
+            return response()->json(new ProfileResource($profile));
         }
 
         return response()->json([
@@ -80,16 +82,43 @@ class ProfileController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ProfilePostRequest $request, string $id) : JsonResponse
     {
-        //
+        // Request validation
+        $validatedData = $request->validated();
+
+        // Check if profile exist
+        try {
+            $profile = Profile::query()->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "error" => "This profile doesn't exist"
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $profile->update($validatedData);
+
+        return response()->json(new ProfileResource($profile));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id) : JsonResponse
     {
-        //
+        // Check if profile exist
+        try {
+            $profile = Profile::query()->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "error" => "This profile doesn't exist"
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $profile->delete();
+
+        return response()->json([
+            "message" => "Profile deleted successfully"
+        ]);
     }
 }

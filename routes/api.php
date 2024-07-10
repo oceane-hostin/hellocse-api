@@ -11,3 +11,5 @@ Route::get('/profiles', [ProfileController::class, 'index']);
 
 Route::post('/profiles', [ProfileController::class, 'store'])->middleware('auth:sanctum');;
 Route::get('/profile/{id}', [ProfileController::class, 'show']);
+Route::put('/profile/{id}', [ProfileController::class, 'update'])->middleware('auth:sanctum');;
+Route::delete('/profile/{id}', [ProfileController::class, 'destroy'])->middleware('auth:sanctum');;
