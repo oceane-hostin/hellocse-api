@@ -21,7 +21,7 @@ class ProfileResource extends JsonResource
             'firstname' => $this->firstname,
             'lastname' => $this->lastname,
             'image' => $this->image,
-            'status' => $this->when(Auth::check(), $this->status),
+            'status' => $this->when(Auth("sanctum")->check(), $this->status),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];
