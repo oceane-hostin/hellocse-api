@@ -38,9 +38,12 @@ class ProfileController extends Controller
         $profileRequestData =
         [
             'firstname' => $validatedData['firstname'],
-            'lastname' => $validatedData['lastname'],
-            'image' => $validatedData['image'],
+            'lastname' => $validatedData['lastname']
         ];
+
+        if (array_key_exists('image', $validatedData)) {
+            $profileRequestData['image'] = $validatedData['image'];
+        }
 
         // Field is not required, will be awaiting if not specified
         if (!empty($validatedData->status)) {
@@ -68,7 +71,7 @@ class ProfileController extends Controller
 
         // Access without authenticate is only allowed if profile is active
         if($profile->status == StatusEnum::ACTIVE->value
-            || Auth::check()
+            || Auth("sanctum")->check()
         ){
             return response()->json(new ProfileResource($profile));
         }

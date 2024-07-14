@@ -37,5 +37,13 @@ class ProfileSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        DB::table('profiles')->insert([
+            'lastname' => 'For test',
+            'firstname' => 'Deletion',
+            'image' => 'https://picsum.photos/200/300',
+            'status' => StatusEnum::AWAITING,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

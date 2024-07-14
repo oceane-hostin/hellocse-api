@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string("lastname");
             $table->string("firstname");
-            $table->string("image"); // todo need something more ?
+            $table->string("image")->nullable(); // todo need something more ?
             $table->enum("status", StatusEnum::toArray())->default(StatusEnum::AWAITING);
             $table->timestamps();
         });

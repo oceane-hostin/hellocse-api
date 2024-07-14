@@ -19,8 +19,17 @@ controller:
 entity:
 	@$(SAIL) artisan make:model -m
 
+factory:
+	@$(SAIL) artisan make:factory
+
 migrate:
 	@$(SAIL) artisan migrate:fresh
+
+prepare-testing:
+	@$(SAIL) artisan migrate --env=testing --seed
+
+reset-testing:
+	@$(SAIL) artisan migrate:rollback --env=testing
 
 resource:
 	@$(SAIL) artisan make:resource
@@ -44,7 +53,7 @@ seeder:
 	@$(SAIL) artisan make:seeder
 
 test:
-	@$(SAIL) artisan install:api
+	@$(SAIL) artisan make:test --unit
 
 
 ## —— Local env ————————————————————————————————————————————————————————————————
