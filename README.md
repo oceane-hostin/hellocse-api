@@ -1,66 +1,167 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Authentication
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+- Api route : /api/login/
+- Method : POST
+- Body : 
+```json 
+{
+    "username": "admin",
+    "password": "password"
+}
+```
+- Responses :   
 
-## About Laravel
+| HTTP Code | Body response | Meaning                    |
+|-----------| --- |----------------------------|
+| 200       | `{"token": "2K9qbcjMWuSfqbLPWHHpup8mD0uQvh0tZx9PNEnxS1c16ede6","token_type": "Bearer"}` | Logged in succesfully |
+| 401       | `{"message": "Unauthorized"}` | Wrong credentials provided |
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## List all profiles
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Api route : /api/profiles/
+- Method : GET
+- Body : No body
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Without authentication :   
+- will always list active profile  
+- field status is not visible
+- Example : 
+```json 
+[
+    {
+        "id": 1,
+        "firstname": "John",
+        "lastname": "Doe",
+        "image": "https://picsum.photos/200/300",
+        "created_at": "2024-07-14T12:55:11.000000Z",
+        "updated_at": "2024-07-14T12:55:11.000000Z"
+    }
+]
+```
 
-## Learning Laravel
+### With authentication : 
+- will return all profiles
+- filed status is accessible
+- Example : 
+```json
+[
+    {
+        "id": 1,
+        "firstname": "Jack",
+        "lastname": "Green",
+        "image": "https://picsum.photos/200/300",
+        "status": "1",
+        "created_at": "2024-07-14T13:59:03.000000Z",
+        "updated_at": "2024-07-14T14:08:51.000000Z"
+    },
+    {
+        "id": 2,
+        "firstname": "Jane",
+        "lastname": "Doe",
+        "image": "https://picsum.photos/200/300",
+        "status": "0",
+        "created_at": "2024-07-14T13:59:03.000000Z",
+        "updated_at": "2024-07-14T13:59:03.000000Z"
+    },
+    {
+        "id": 3,
+        "firstname": "Mary",
+        "lastname": "Green",
+        "image": "https://picsum.photos/200/300",
+        "status": "2",
+        "created_at": "2024-07-14T13:59:03.000000Z",
+        "updated_at": "2024-07-14T13:59:03.000000Z"
+    },
+    {
+        "id": 4,
+        "firstname": "Test",
+        "lastname": "Test",
+        "image": "https://picsum.photos/200/300",
+        "status": "2",
+        "created_at": "2024-07-14T14:03:16.000000Z",
+        "updated_at": "2024-07-14T14:03:16.000000Z"
+    }
+]
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
+## Get one profile
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Api route : /api/profile/{id}
+- Method : GET
+- Body : No body
 
-### Premium Partners
+### Without authentication :
+Responses :
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+| HTTP Code | Body response                | Meaning                                                                           |
+|-----------|------------------------------|-----------------------------------------------------------------------------------|
+| 200       | Json of entity               | The profile exist and is active                                                   |
+| 403       | Json with error message  | The profile existe but is not active, and can be accessed only by logged in admin |
+| 404       | Json with error message      | The profile doesn't exist                                                         |
 
-## Contributing
+### With authentication : 
+Responses :
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| HTTP Code | Body response                | Meaning                                                                           |
+|-----------|------------------------------|-----------------------------------------------------------------------------------|
+| 200       | Json of entity               | The profile exist                                                  |
+| 401       | Json with error message  | Wrong / no bearer token provided |
+| 404       | Json with error message      | The profile doesn't exist                                                         |
 
-## Code of Conduct
+## Create a profile
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Api route : /api/profiles/
+- Method : POST
+- Authentication must be provided ad a bearer token
+- Body :
+```json
+{
+    "firstname": "Test",
+    "lastname": "Test",
+    "image": "https://picsum.photos/200/300"
+}
+```
+- Responses :
 
-## Security Vulnerabilities
+| HTTP Code | Body response                 | Meaning                          |
+|-----------|-------------------------------|----------------------------------|
+| 200       | Json of created entity        | Creation successful             |
+| 401       | Json with error message | Wrong / no bearer token provided |
+| 422 | Json with details of errors | Body provided not corresponding to validation rules |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Update a profile
 
-## License
+- Api route : /api/profile/{id}
+- Method : PUT
+- Authentication must be provided ad a bearer token
+- Body :
+```json
+{
+    "firstname": "Jack",
+    "lastname": "Green",
+    "status": 1
+}
+```
+- Responses :
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| HTTP Code | Body response                 | Meaning                                             |
+|-----------|-------------------------------|-----------------------------------------------------|
+| 200       | Json of updated entity        | Updated successful                                  |
+| 401       | Json with error message | Wrong / no bearer token provided                    |
+| 422 | Json with details of errors   | Body provided not corresponding to validation rules |
+
+## Delete a profile
+
+- Api route : /api/profile/{id}
+- Method : DELETE
+- Authentication must be provided ad a bearer token
+- Responses :
+
+| HTTP Code | Body response                 | Meaning                                               |
+|-----------|-------------------------------|-------------------------------------------------------|
+| 200       | Json with success message     | Deleted successful                                    |
+| 401       | Json with error message | Wrong / no bearer token provided                      |
+| 404 | Json with error message       | Profile targeted doesn't exist and couln'd be deleted |

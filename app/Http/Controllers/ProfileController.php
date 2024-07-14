@@ -19,9 +19,13 @@ class ProfileController extends Controller
      */
     public function index() : JsonResponse
     {
-        $profiles = ProfileResource::collection(
-            Profile::all()->where('status', '=', StatusEnum::ACTIVE->value)
-        );
+        if(!Auth("sanctum")->check()) {
+            $profiles = ProfileResource::collection(
+                Profile::all()->where('status', '=', StatusEnum::ACTIVE->value)
+            );
+        } else {
+            $profiles = ProfileResource::collection(Profile::all());
+        }
 
         return response()->json($profiles);
     }
